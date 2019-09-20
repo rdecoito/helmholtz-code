@@ -3,11 +3,11 @@ import math
 from datetime import datetime
 
 class HelmholtzCage:
-    __current_x = []
-    __current_y = []
-    __current_z = []
-
     def __init__(self, filename, L, d, N):
+        self.__current_x = []
+        self.__current_y = []
+        self.__current_z = []
+
         # DON'T FORGET THAT B IS IN mGAUSS
         self.__magfield = MagField(filename)
         # set length of side of coil
@@ -68,13 +68,12 @@ class HelmholtzCage:
 
 
 class MagField:
-    __realtime = []
-    __time = []
-    __mag_x = []
-    __mag_y = []
-    __mag_z = []
-
     def __init__(self, fname):
+        self.__realtime = []
+        self.__time = []
+        self.__mag_x = []
+        self.__mag_y = []
+        self.__mag_z = []
         # magfield intensity is stored in mGauss!!!
         # therefore, the csv file is expected to be in mGauss as well!!
 
