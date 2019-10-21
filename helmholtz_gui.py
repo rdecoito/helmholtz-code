@@ -1,15 +1,22 @@
 #3 booleans to use, readytostart, readytoload, testrunning
+"""
+@authors: Tyler Sitzlar, Jordan Jones
+"""
 """TODO
-Start/Stop functionality
+Start/Stop functionality ---------------------------------------- To Test this, uncomment all the ### lines
 Get data for Amps, Volts, Temps
+   Are there 3 or 6 temp sensors?
 Write temp data to the table
-Functionality of Time Elasped
-Ensure the update function works with data gathering
+Fix Vector table time with deltaT
+Do we want the update funciton to run a set interval or deltaT, or deltaT/2?
 """ 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from piCode.Helmholtz import HelmholtzCage
 import time
-import threading
+###import wiringpi
+###from piCode.uart_hasselhof import UartHasselholf
+import datetime
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -93,6 +100,7 @@ class Ui_MainWindow(object):
         self.buttonStart.clicked.connect(self.start)
         self.buttonStart.setStyleSheet("background-color: green")
 
+        ###self.uart = UartHasselholf()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -115,6 +123,7 @@ class Ui_MainWindow(object):
             self.readytoload = True
     
     def load(self): # Loads data from csv into the tablew view.
+        #I should probably take these from the uart at this point
         if self.readytoload == True:
             self.cage_model = HelmholtzCage(self.path, 0.8, 0.8 * 0.5445, 25)
             self.tableVectors.setRowCount(len(self.cage_model.get_mag_x()))
@@ -133,13 +142,18 @@ class Ui_MainWindow(object):
     def start(self):
         try:
             if self.readytostart == True:
-                # start_test(self.cage_model) # waiting for this to be implemented
+                #### start_test(self.cage_model) # waiting for this to be implemented
                 self.testrunning = True
                 self.readytoload = False
-                #u = threading.Thread(target=self.update)
-                #u.start()
-                ##self.update #make this a thread probably
-                ##self.readytostart = False #Do we really need this Boolean?
+                global start_time
+                start_time = time.time()
+                #global amps
+                #global volts
+                #global temps
+                #amps="4.20"
+                #temps[0]="dog"
+                
+                #self.readytostart = False #Do we really need this Boolean?
                 self.statusbar.showMessage("Test started.")
                 self.buttonStart.setText("Stop")
                 self.buttonStart.clicked.connect(self.stop)
@@ -153,7 +167,7 @@ class Ui_MainWindow(object):
     def stop(self):
         try:
             if self.testrunning == True:
-                # stop_test(self.cage_model) #TODO this
+                ### #Need to implement a stop funcion for uart somehow # stop_test(self.cage_model) #TODO this
                 self.testrunning = False
                 self.readytoload = True
                 #self.readytostart = True #Do we really need this Boolean?
@@ -167,17 +181,6 @@ class Ui_MainWindow(object):
                 
         except:    
             self.statusbar.showMessage("Some error occurred when stopping the test.")
-    
-    #constantly running function while the test has started
-    def update(self):
-        self.buttonFilePath.setStyleSheet("background-color: blue")
-        while(self.testrunning):
-            #get data for amps temps and volts
-            self.buttonLoad.setStyleSheet("background-color: yellow")
-            #u.sleep(10000)
-            #self.textBrowserAmps.setPlainText("0.00")#Cannot create children for a parent that is in a different thread.
-            #self.textBrowserVolts.setPlainText("0.00")
-            
         
         
 if __name__ == "__main__":
@@ -187,4 +190,21 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
+    
+    amps = "0.00"
+    volts= "0.00"
+    temps= {"0.00","0.00","0.00","0.00","0.00","0.00"}
+    start_time = 0
+    def update():
+        if(ui.testrunning):
+            ui.labelTime.setText("Time Elapsed: "+str(datetime.timedelta(seconds=time.time()-start_time)))#format HH:MM:SS.sssssss
+            #get data from MC about Temps, volts, amps and update display
+            ui.textBrowserAmps.setPlainText(amps)
+            ui.textBrowserVolts.setPlainText(volts)
+            #ui.tableTemps.setItem(c,r,data)
+        
+    timer = QtCore.QTimer()
+    timer.timeout.connect(update)
+    timer.start(100)#change this timer to deltaT probably
+    
     sys.exit(app.exec_())
