@@ -4,8 +4,8 @@ Created on Mon Sep  9 19:19:49 2019
 Updated on Wed Oct 9 17:43:59 2019
 @author: Matthew Middleton
 """
-#import wiringpi
-#from time import sleep
+import wiringpi
+from time import sleep
 
 class UartHasselhof:
     
@@ -53,7 +53,7 @@ class UartHasselhof:
     """Writes data with UART TxD port on Raspery Pi
         ascii 1 signals that the data is starting transmission
         ascii 2 signals that the next data is being sent
-        ascii 4 signals that the data is stopping transmission
+        ascii 4 signals that the data is stopping transmission"""
     def output_to_MC(self, data = list):
         
         wiringpi.wiringPiSetup()
@@ -75,5 +75,5 @@ class UartHasselhof:
         wiringpi.serialPuts(serial, chr(4).encode('ascii'))
         #closes the serial port
         wiringpi.serialClose(serial)
-        return"""
+        return
     
