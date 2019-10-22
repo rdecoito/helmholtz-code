@@ -4,10 +4,10 @@ Created on Mon Sep  9 19:19:49 2019
 Updated on Wed Oct 9 17:43:59 2019
 @author: Matthew Middleton
 """
-import wiringpi
-from time import sleep
+#import wiringpi
+#from time import sleep
 
-class UartHasselholf:
+class UartHasselhof:
     
     def __init__(self):
         self = self
@@ -18,38 +18,42 @@ class UartHasselholf:
             it's second index is the string of mag_field_x
             third index is the string of mag_field_y
             fourth index is the string of mag_field_z"""
-    def sort_input_lists(self, time_to_run = float, mag_field_x = list,
-                        mag_field_y = list, mag_field_z = list):
-        list_length = len(mag_field_x)
+    def sort_input_lists(self, time_to_run = float, x = list,
+                        y = list, z = list):
+        list_length = len(x)
         #calculates delta_t: delta_t is the time by which each test should be
         #run for based of the total number of data_points-1
         #we chose data_points-1 to account for starting at time=0
         delta_t = float(time_to_run)/(list_length-1)
-        mag_x_str = ''
-        mag_y_str = ''
-        mag_z_str = ''
-        #makes a string out of each data list where each data value
-        #has a precision of 6
+        x_list = []
+        x_str = ''
+        y_list = []
+        y_str = ''
+        z_list = []
+        z_str = ''
+        
+        #makes a list out of each data list where each data value
+        #has a precision of 6, then join the lists together
         for index in range(0, list_length, 1):
-            mag_x_str += '{:.6f}'.format(mag_field_x[index])
-            mag_x_str += ' '
-            mag_y_str += '{:.6f}'.format(mag_field_y[index])
-            mag_y_str += ' '
-            mag_z_str += '{:.6f}'.format(mag_field_z[index])
-            mag_z_str += ' '
+            x_list.append('{:.6f}'.format(x[index]))
+            y_list.append('{:.6f}'.format(y[index]))
+            z_list.append('{:.6f}'.format(z[index]))
+        x_str = ' '.join(x_list)
+        y_str = ' '.join(y_list)
+        z_str = ' '.join(z_list)
         
         #create an array where each index holds a string
         str_list = []
         str_list.append('{0:.6f}'.format(delta_t))
-        str_list.append(mag_x_str)
-        str_list.append(mag_y_str)
-        str_list.append(mag_z_str)
+        str_list.append(x_str)
+        str_list.append(y_str)
+        str_list.append(z_str)
         return str_list
     
     """Writes data with UART TxD port on Raspery Pi
         ascii 1 signals that the data is starting transmission
         ascii 2 signals that the next data is being sent
-        ascii 4 signals that the data is stopping transmission"""
+        ascii 4 signals that the data is stopping transmission
     def output_to_MC(self, data = list):
         
         wiringpi.wiringPiSetup()
@@ -71,5 +75,5 @@ class UartHasselholf:
         wiringpi.serialPuts(serial, chr(4).encode('ascii'))
         #closes the serial port
         wiringpi.serialClose(serial)
-        return
+        return"""
     
