@@ -9,12 +9,13 @@ Get data for Amps, Volts, Temps
 Write temp data to the table
 Fix Vector table time with deltaT
 Do we want the update funciton to run a set interval or deltaT, or deltaT/2?
+#### denotes experimental lines for running on the pi
 """ 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from piCode.Helmholtz import HelmholtzCage
 import time
-###import wiringpi
-###from piCode.uart_hasselhof import UartHasselholf
+import wiringpi####
+from piCode.uart_hasselhof import UartHasselholf####
 import datetime
 
 
@@ -100,7 +101,7 @@ class Ui_MainWindow(object):
         self.buttonStart.clicked.connect(self.start)
         self.buttonStart.setStyleSheet("background-color: green")
 
-        ###self.uart = UartHasselholf()
+        self.uart = UartHasselholf()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -136,13 +137,14 @@ class Ui_MainWindow(object):
                 self.tableVectors.setItem(i, 3, QtWidgets.QTableWidgetItem(str(round(self.cage_model.get_current_z()[i], 5))))                                                
             self.statusbar.showMessage("Load success. Review data and press start to begin test.")
             self.readytostart = True
+            ####uart.sort_input_lists(10,self.cagemodel.get_current_x,self.cagemodel.get_current_y,self.cagemodel.get_current_z)####
         else:
             self.statusbar.showMessage("Some load error occurred. Ensure file is selected properly and try again.")
 
     def start(self):
         try:
             if self.readytostart == True:
-                #### start_test(self.cage_model) # waiting for this to be implemented
+                uart.output_to_MC(uart.sort_input_lists(10,self.cagemodel.get_current_x,self.cagemodel.get_current_y,self.cagemodel.get_current_z))#### start_test(self.cage_model) # waiting for this to be implemented
                 self.testrunning = True
                 self.readytoload = False
                 global start_time
@@ -167,7 +169,7 @@ class Ui_MainWindow(object):
     def stop(self):
         try:
             if self.testrunning == True:
-                ### #Need to implement a stop funcion for uart somehow # stop_test(self.cage_model) #TODO this
+                #### #Need to implement a stop funcion for uart somehow # stop_test(self.cage_model) #TODO this
                 self.testrunning = False
                 self.readytoload = True
                 #self.readytostart = True #Do we really need this Boolean?
