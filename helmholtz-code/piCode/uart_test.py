@@ -1,5 +1,6 @@
 from Helmholtz import HelmholtzCage
 from uart_hasselhof import UartHasselhof
+import platform
 
 if __name__ == "__main__":
 
@@ -10,9 +11,9 @@ if __name__ == "__main__":
     # detect the operating system, if windows, replace forward slashes with backslashes
     # code will work for macOS, linux, and windows
     pathstr = "../TestData/ThinSat_MagField_Vector.csv"
-    """if platform.system() == 'Windows':
+    if platform.system() == 'Windows':
         str = "..\TestData\ThinSat_MagField_Vector.csv"
-     """                       
+                      
     cage = HelmholtzCage(pathstr, L, d, N)
                                                           
     currentX = cage.get_current_x()
@@ -23,5 +24,6 @@ if __name__ == "__main__":
                                                                                   
     time_to_run = 10    
     sorted_list = uart.sort_input_lists(time_to_run, currentX, currentY, currentZ)
+    print(sorted_list[0])
     uart.output_to_MC(sorted_list)
 
