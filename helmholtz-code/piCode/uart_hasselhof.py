@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Sep  9 19:19:49 2019
-Updated on Wed Oct 9 17:43:59 2019
+Updated on Wed Nov 17 16:41:10 2019
 @author: Matthew Middleton
 """
 import wiringpi
@@ -65,15 +65,13 @@ class UartHasselhof:
        #signals to start data transmission, uses start of header char
         wiringpi.serialPuts(serial, chr(1).encode('ascii'))
         wiringpi.serialPuts(serial, data[0].encode('ascii'))
-        for subset in data:
+        for index in range(1, len(data), 1):
             #signals that the next data is being sent, uses start of text char
             wiringpi.serialPuts(serial, chr(2).encode('ascii'))
             #write the string data, as ascii, to the Raspberry Pi
-            for index in range(0, len(subset), 1):
-                wiringpi.serialPuts(serial, subset[index].encode('ascii'))
+            wiringpi.serialPuts(serial, data[index].encode('ascii'))
         #signals that data transmission is ending, uses end of transmission char
         wiringpi.serialPuts(serial, chr(4).encode('ascii'))
         #closes the serial port
         wiringpi.serialClose(serial)
         return
-    
