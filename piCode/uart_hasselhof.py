@@ -54,23 +54,23 @@ class UartHasselhof:
         ascii 1 signals that the data is starting transmission
         ascii 2 signals that the next data is being sent
         ascii 4 signals that the data is stopping transmission"""
-    def output_to_MC(self, data = list):
-        
+    def output_to_MC(self, data=list):
         wiringpi.wiringPiSetup()
         #opens the Raspberry Pi's UART port, w/ a data transfer rate of
         #115200 bits/s
-        serial = wiringpi.serialOpen('/dev/ttyS0', 115200)
+        serial = wiringpi.serialOpen('/dev/ttyS0', 9600)
         #sleep a few seconds to make sure the port opens and sets connections
         #properly
         sleep(2)
        #signals to start data transmission, uses start of header char
         wiringpi.serialPuts(serial, chr(1).encode('ascii'))
         wiringpi.serialPuts(serial, data[0].encode('ascii'))
-        for index in range(1, len(data), 1):
+        for subset in data:
             #signals that the next data is being sent, uses start of text char
             wiringpi.serialPuts(serial, chr(2).encode('ascii'))
             #write the string data, as ascii, to the Raspberry Pi
-            wiringpi.serialPuts(serial, data[index].encode('ascii'))
+            for index in range(0, len(subset), 1):
+                wiringpi.serialPuts(serial, subset[index].encode('ascii'))
         #signals that data transmission is ending, uses end of transmission char
         wiringpi.serialPuts(serial, chr(4).encode('ascii'))
         #closes the serial port
