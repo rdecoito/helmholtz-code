@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Sep  9 19:19:49 2019
-Updated on Wed Oct 9 17:43:59 2019
+Updated on Wed Nov 19 17:01:30 2019
 @author: Matthew Middleton
 """
 import wiringpi
@@ -51,29 +51,36 @@ class UartHasselhof:
         return str_list
     
     """Writes data with UART TxD port on Raspery Pi
+        Takes a list of data (size=4), whose first parameter is the time increment
+        between each field of data to test and the last 3 will be the components
+        of the magnetic field x, y, and z respectively.
+        Signals between each data field
         ascii 1 signals that the data is starting transmission
         ascii 2 signals that the next data is being sent
         ascii 4 signals that the data is stopping transmission"""
-    def output_to_MC(self, data=list):
+    def output_to_MC(self, data=list, baudrate=int):
+        length = len(data)
+        #Checks if the list is of length 4. If it isn't, immediately return
+        if(length!=4):
+            print("Invalid list size. Needed size of 4, you provided a list whose size is {}".format(length))
+            return
         wiringpi.wiringPiSetup()
         #opens the Raspberry Pi's UART port, w/ a data transfer rate of
         #115200 bits/s
-        serial = wiringpi.serialOpen('/dev/ttyS0', 9600)
+        serial = wiringpi.serialOpen('/dev/ttyS0', baudrate)
         #sleep a few seconds to make sure the port opens and sets connections
         #properly
         sleep(2)
        #signals to start data transmission, uses start of header char
         wiringpi.serialPuts(serial, chr(1).encode('ascii'))
         wiringpi.serialPuts(serial, data[0].encode('ascii'))
-        for subset in data:
+        for index in range(1, length, 1):
             #signals that the next data is being sent, uses start of text char
             wiringpi.serialPuts(serial, chr(2).encode('ascii'))
             #write the string data, as ascii, to the Raspberry Pi
-            for index in range(0, len(subset), 1):
-                wiringpi.serialPuts(serial, subset[index].encode('ascii'))
+            wiringpi.serialPuts(serial, data[index].encode('ascii'))
         #signals that data transmission is ending, uses end of transmission char
         wiringpi.serialPuts(serial, chr(4).encode('ascii'))
         #closes the serial port
         wiringpi.serialClose(serial)
         return
-    
