@@ -6,13 +6,14 @@ Updated on Wed Dec 5 17:00:30 2019
 """
 #import wiringpi
 import serial
+import RPi.GPIO as GPIO
 from time import sleep
 
 class UartHasselhof:
     
     def __init__(self):
         self = self
-    
+ 
     """Creates a list from the given lists and calculates the increment between
     each data point by the test time, time_to_run.
     Return: a list whose first index is the test time increment, delta_t
@@ -70,11 +71,11 @@ class UartHasselhof:
 			#wiringpi.wiringPiSetup()
 			#opens the Raspberry Pi's UART port, w/ a data transfer rate of baudrate
 			#serial = wiringpi.serialOpen('/dev/ttyS0', baudrate)
-            uart = serial.Serial(port='/dev/tty/S0',baudrate=rate)
+            uart = serial.Serial(port='/dev/ttyS0',baudrate=rate)
 			#sleep a few seconds to make sure the port opens and sets connections
 			#properly
             sleep(4)
-            uart.write(chr(1).encode('ascii'))
+            uart.write((129).to_bytes(1, byteorder='big'))
             uart.write(data[0].encode('ascii'))
             #signals to start data transmission, uses start of header char
 			#wiringpi.serialPuts(serial, chr(1).encode('ascii'))
@@ -92,12 +93,14 @@ class UartHasselhof:
             #closes the serial port
 			#wiringpi.serialClose(serial)
             uart.close()
-        except ValueError:
+        except ValueError as e:
             print("Error regarding values passed to serial.")
-        except serial.SerialException:
+            print(str(e))
+        except serial.SerialException as e:
             print("Error with port access or configuration")
-        except serial.SerialTimeoutException:
+            print(str(e))
+        except serial.SerialTimeoutException as e:
             print("Error regarding write timeout")
+            print(str(e))
         return
-
 
