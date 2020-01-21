@@ -1,14 +1,15 @@
+#include "../inc/uart.h"
 
-#include "uart.h"
-
-//Baud Rate calculation:
-//SourceClk/(16*desiredBaud)
-//Example:
-//8000000/(16*115200) = 4.34
-//Fractional Part = 0.34 so UCBRSx = 0x4 according to Table 30-4. USBRSx Settings for Fractional Portion of N=fBRCLK/Baud Rate (Family User's Guide)
-//UCAxBRW = 4
-//UCBRFx = int( (4.34-4)*16) = 5
-// The steps here are from Section 30.3.10 of the Family User's Guide
+/**
+ * Baud Rate calculation:
+ * SourceClk/(16*desiredBaud)
+ * Example:
+ * 8000000/(16*115200) = 4.34
+ * Fractional Part = 0.34 so UCBRSx = 0x4 according to Table 30-4. USBRSx Settings for Fractional Portion of N=fBRCLK/Baud Rate (Family User's Guide)
+ * UCAxBRW = 4
+ * UCBRFx = int( (4.34-4)*16) = 5
+ * The steps here are from Section 30.3.10 of the Family User's Guide
+ */
 
 typedef struct _UCBRS_Table
 {
@@ -32,14 +33,33 @@ static UCBRS_Table UCBRS_Vals[] = {
                                    {0.9004, 0xFB}, {0.9170, 0xFD}, {0.9288, 0xFE}
                                   };
 
-void beginInit(uint32_t baud, unsigned int srcClk, uint32_t srcClkHz, uint8_t *buffer, int buff_size)
+void UART()
+{
+    CSCTL0_H_ = (volatile unsigned char *) &CSCTL0_H;
+    CSCTL1_ = (volatile unsigned int *) &CSCTL1;
+    CSCTL2_ = (volatile unsigned int *) &CSCTL2;
+    CSCTL3_ = (volatile unsigned int *) &CSCTL3;
+
+    UCA0CTLW0_ = (volatile unsigned int *) &UCA0CTLW0;
+    UCA0CTLW1_ = (volatile unsigned int *) &UCA0CTLW1;
+    UCA0BRW_ = (volatile unsigned int *) &UCA0BRW;
+    UCA0MCTLW_ = (volatile unsigned int *) &UCA0MCTLW;
+    UCA0STATW_ = (volatile unsigned int *) &UCA0STATW;
+    UCA0RXBUF_ = (volatile unsigned int *) &UCA0RXBUF;
+    UCA0TXBUF_ = (volatile unsigned int *) &UCA0TXBUF;
+    UCA0IE_ = (volatile unsigned int *) &UCA0IE;
+    UCA0IFG_ = (volatile unsigned int *) &UCA0IFG;
+    UCA0IV_ = (volatile unsigned int *) &UCA0IV;
+}
+
+void beginInit(uint32_t baud, unsigned int srcClk, uint32_t srcClkHz, uint8_t *buffer, size_t buff_size)
 {
     //Initialize UART pins to receive
     P6DIR = BIT1;
     P6OUT = BIT1;
 
     //ensure pin changes take effect
-    PM5CTL0 &= ~LOCKPM5;
+    PM5CTL0 &= ~LOCKLPM5;
 
     setClk();
     baudrate = baud;
@@ -55,7 +75,7 @@ static void initUART(uint32_t baud, unsigned int srcClk, uint32_t srcClkHz)
     UCABRF_Val = (int)(( (double)srcClkHz / (16.0*((double)baud))) - ( (double)UCA0BRW_Val)*16);
 
     //determine first stage modulation value
-    switch(UCABFR_Val)
+    switch(UCABRF_Val)
     {
     case 0:
         UCABRF_Val = UCBRF_0;
@@ -141,7 +161,7 @@ static void initUART(uint32_t baud, unsigned int srcClk, uint32_t srcClkHz)
     //Sets the baudrate calculation
     *UCA0BRW_ = UCA0BRW_Val;
 
-    *UCA0MCTLW_ = UCOS16 | UCBRF_Val | (UCBRS_mask << 8);
+    *UCA0MCTLW_ = UCOS16 | UCABRF_Val | (UCBRS_mask << 8);
 
     *UCA0CTLW0_ &= ~(UCSWRST);
 
@@ -176,7 +196,7 @@ uint8_t read()
 size_t readAndSet(uint8_t *buffer, size_t size)
 {
     size_t current = 0;
-    while(!empty() && current<size)
+    while(!isEmpty() && current<size)
     {
         buffer[current] = get();
         current++;
@@ -186,13 +206,13 @@ size_t readAndSet(uint8_t *buffer, size_t size)
 
 void endUART(void)
 {
-    unsigned int dummy;
+    volatile unsigned int dummy;
     *UCA0IE_ = 0;
 
     P6OUT &= ~BIT1;
     P6DIR &= ~BIT1;
 
-    PM5CTL0 &= ~LOCKPM5;
+    PM5CTL0 &= ~LOCKLPM5;
 
     baudrate = 0;
 
@@ -200,11 +220,11 @@ void endUART(void)
     *UCA0BRW_ = 0;
     *UCA0MCTLW_ = 0;
     dummy = *UCA0RXBUF_;
-    reset();
+    empty();
 }
 
-#pragma vector=USCIA0_VECTOR
-__interrupt void USCIA0_ISR()
+#pragma vector = USCI_A0_VECTOR
+__interrupt void USCIA0_ISR(void)
 {
     switch(__even_in_range((*UCA0IV_), USCI_UART_UCSTTIFG))
     {
@@ -219,6 +239,3 @@ __interrupt void USCIA0_ISR()
             break;
     }
 }
-
-
-
