@@ -5,7 +5,7 @@
  *      Author: Matthew Middleton
  */
 
-#include "RingBuffer.h"
+#include "../inc/RingBuffer.h"
 
 void initRingBuff(uint8_t *buffer, size_t size)
 {
@@ -13,23 +13,9 @@ void initRingBuff(uint8_t *buffer, size_t size)
     max_size = size;
 }
 
-void put(uint8_t data)
-{
-    (*ring_buffer)[head] = data;
-
-    if(full)
-    {
-        tail = (tail+1) % max_size;
-    }
-
-    head = (head+1) % max_size;
-
-    full = head==tail;
-}
-
 uint8_t get(void)
 {
-    uint8_t val = (*ring_buffer)[tail];
+    uint8_t val = ring_buffer[tail];
 
     full = 0;
     tail = (tail+1) % max_size;
@@ -37,7 +23,7 @@ uint8_t get(void)
     return val;
 }
 
-void reset()
+void empty()
 {
     head = tail;
     full = 0;
