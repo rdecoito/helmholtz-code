@@ -11,40 +11,50 @@ static int16_t UCBRS_mask = 0;
 static double lookup = 0;
 
 /*------------------------------------------------------*/
-//Clock registers
-volatile unsigned char *CSCTL0_H_ = CSCTL0_H;
-volatile unsigned int *CSCTL1_ = CSCTL1;
-volatile unsigned int *CSCTL2_ = CSCTL2;
-volatile unsigned int *CSCTL3_ = CSCTL3;
+//Clock registers pointers
+static volatile unsigned char *CSCTL0_H_;
+static volatile unsigned int *CSCTL1_;
+static volatile unsigned int *CSCTL2_;
+static volatile unsigned int *CSCTL3_;
 
 /*------------------------------------------------------*/
-//eUSCI UART registers
-volatile unsigned int *UCA0CTLW0_ = (volatile unsigned int *) &UCA0CTLW0;
-volatile unsigned int *UCA0CTLW1_ = (volatile unsigned int *) &UCA0CTLW1;
-volatile unsigned int *UCA0BRW_ = (volatile unsigned int *) &UCA0BRW;
-volatile unsigned int *UCA0MCTLW_ = (volatile unsigned int *) &UCA0MCTLW;
-volatile unsigned int *UCA0STATW_ = (volatile unsigned int *) &UCA0STATW;
-volatile unsigned int *UCA0RXBUF_ = (volatile unsigned int *) &UCA0RXBUF;
-volatile unsigned int *UCA0TXBUF_ = (volatile unsigned int *) &UCA0TXBUF;
-volatile unsigned int *UCA0IE_ = (volatile unsigned int *) &UCA0IE;
-volatile unsigned int *UCA0IFG_ = (volatile unsigned int *) &UCA0IFG;
-volatile unsigned int *UCA0IV_ = (volatile unsigned int *) &UCA0IV;
+//eUSCI UART registers pointers
+static volatile unsigned int *UCA0CTLW0_;
+static volatile unsigned int *UCA0CTLW1_;
+static volatile unsigned int *UCA0BRW_;
+static volatile unsigned int *UCA0MCTLW_;
+static volatile unsigned int *UCA0STATW_;
+static volatile unsigned int *UCA0RXBUF_;
+static volatile unsigned int *UCA0TXBUF_;
+static volatile unsigned int *UCA0IE_;
+static volatile unsigned int *UCA0IFG_;
+static volatile unsigned int *UCA0IV_;
 
-/*Begins initialization of UART configuring the pins for receiving data
+/**
+ * Acts as a constructor, assigning the peripheral addresses to the
+ * pointers. Must be called first
+ */
+void UART();
+
+/**
+ * Begins initialization of UART configuring the pins for receiving data
  * calling initUART, which initializes the eUSCI UART registers for receiving
  * data based on the given parameters and sets a buffer to use for eUSCI UART.
  */
 void beginInit(uint32_t baud, unsigned int srcClk, uint32_t srcClkHz, uint8_t *buffer, size_t buff_size);
 
-/*Initializes eUSCI UART registers for receiving data
+/**
+ * Initializes eUSCI UART registers for receiving data
  */
 static void initUART(uint32_t baud, unsigned int srcClk, uint32_t srcClkHz);
 
-/*Sets MCLK and SMCLK to source the DCO at 1MHz
+/**
+ * Sets MCLK and SMCLK to source the DCO at 1MHz
  */
 static void setClk(void);
 
-/*Checks whether eUSCI_A is currently tranmitting/receiving
+/**
+ * Checks whether eUSCI_A is currently tranmitting/receiving
  * Returns 1 if transmitting/receiving, 0 if not
  */
 inline uint8_t isInProgress(void)
@@ -52,11 +62,13 @@ inline uint8_t isInProgress(void)
     return *UCA0STATW_ & UCBUSY;
 }
 
-/*Reads a single character from the ring buffer
+/**
+ * Reads a single character from the ring buffer
  */
 uint8_t read(void);
 
-/*Reads the entirety of the ring buffer and places its contents into the given
+/**
+ * Reads the entirety of the ring buffer and places its contents into the given
  * buffer
  */
 size_t readAndSet(uint8_t *buffer, size_t size);
@@ -65,10 +77,11 @@ void endUART(void);
 
 inline size_t available(void)
 {
-    size();
+    return size();
 }
 
-/*Returns the baudrate
+/**
+ * Returns the baudrate
  */
 inline uint32_t getBaudrate(void)
 {
@@ -77,8 +90,11 @@ inline uint32_t getBaudrate(void)
 
 inline void clear(void)
 {
-    reset();
+    empty();
 }
+
+
+__interrupt void USCIA0_ISR();
 
 #endif
 
