@@ -12,32 +12,49 @@
 
 static size_t head = 0;
 static size_t tail = 0;
-static const size_t max_size;
+static size_t max_size;
 static uint8_t *ring_buffer = NULL;
 static uint8_t full = 0;
 
-/*Initializes the ring buffer by assigning the given buffer to the internal
+/**
+ * Initializes the ring buffer by assigning the given buffer to the internal
  * ring buffer and setting the max size that the buffer can hold
  */
 void initRingBuff(uint8_t *buffer, size_t size);
 
-/*Places the given data into the ring buffer
+/**
+ * Places the given data into the ring buffer
  */
-void put(uint8_t data);
+inline void put(uint8_t data)
+{
+    ring_buffer[head] = data;
 
-/*Retrieves the data from the ring buffer
+        if(full)
+        {
+            tail = (tail+1) % max_size;
+        }
+
+        head = (head+1) % max_size;
+
+        full = head==tail;
+}
+
+/**
+ * Retrieves the data from the ring buffer
  */
 uint8_t get(void);
 
-/*Sets the buffer to a state where it may be considered empty
+/**
+ * Sets the buffer to a state where it may be considered empty
  * and the head and tail are the same
  */
-void reset();
+void empty();
 
-/*Determines if the buffer is empty
+/**
+ * Determines if the buffer is empty
  * Returns a non-zero, positive integer if empty, 0 if emtpy
  */
-inline uint8_t empty(void)
+inline uint8_t isEmpty(void)
 {
     //if head and tail are equal, we are empty
     return (!full && (head==tail));
@@ -46,7 +63,7 @@ inline uint8_t empty(void)
 /*Determines if the buffer is full
  * Returns non-zero, positive integer if full, 0 if empty
  */
-inline uint8_t full(void)
+inline uint8_t isFull(void)
 {
     //If tail is ahead the head by 1, we are full
     return full;
