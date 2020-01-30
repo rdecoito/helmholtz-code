@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Sep  9 19:19:49 2019
-Updated on Wed Nov 19 17:01:30 2019
+Updated on Wed Dec 5 17:00:30 2019
 @author: Matthew Middleton
 """
-import wiringpi
+#import wiringpi
+import serial
+import RPi.GPIO as GPIO
 from time import sleep
 
 class UartHasselhof:
     
     def __init__(self):
         self = self
-    
+ 
     """Creates a list from the given lists and calculates the increment between
     each data point by the test time, time_to_run.
     Return: a list whose first index is the test time increment, delta_t
@@ -54,33 +56,51 @@ class UartHasselhof:
         Takes a list of data (size=4), whose first parameter is the time increment
         between each field of data to test and the last 3 will be the components
         of the magnetic field x, y, and z respectively.
+        Takes a rate which is the baudrate for the UART read-write protocol
         Signals between each data field
         ascii 1 signals that the data is starting transmission
         ascii 2 signals that the next data is being sent
         ascii 4 signals that the data is stopping transmission"""
-    def output_to_MC(self, data=list, baudrate=int):
+    def output_to_MC(self, data=list, rate=int):
         length = len(data)
         #Checks if the list is of length 4. If it isn't, immediately return
         if(length!=4):
             print("Invalid list size. Needed size of 4, you provided a list whose size is {}".format(length))
             return
-        wiringpi.wiringPiSetup()
-        #opens the Raspberry Pi's UART port, w/ a data transfer rate of
-        #115200 bits/s
-        serial = wiringpi.serialOpen('/dev/ttyS0', baudrate)
-        #sleep a few seconds to make sure the port opens and sets connections
-        #properly
-        sleep(2)
-       #signals to start data transmission, uses start of header char
-        wiringpi.serialPuts(serial, chr(1).encode('ascii'))
-        wiringpi.serialPuts(serial, data[0].encode('ascii'))
-        for index in range(1, length, 1):
-            #signals that the next data is being sent, uses start of text char
-            wiringpi.serialPuts(serial, chr(2).encode('ascii'))
-            #write the string data, as ascii, to the Raspberry Pi
-            wiringpi.serialPuts(serial, data[index].encode('ascii'))
-        #signals that data transmission is ending, uses end of transmission char
-        wiringpi.serialPuts(serial, chr(4).encode('ascii'))
-        #closes the serial port
-        wiringpi.serialClose(serial)
+        try:
+			#wiringpi.wiringPiSetup()
+			#opens the Raspberry Pi's UART port, w/ a data transfer rate of baudrate
+			#serial = wiringpi.serialOpen('/dev/ttyS0', baudrate)
+            uart = serial.Serial(port='/dev/ttyS0',baudrate=rate)
+			#sleep a few seconds to make sure the port opens and sets connections
+			#properly
+            sleep(4)
+            uart.write((129).to_bytes(1, byteorder='big'))
+            uart.write(data[0].encode('ascii'))
+            #signals to start data transmission, uses start of header char
+			#wiringpi.serialPuts(serial, chr(1).encode('ascii'))
+			#wiringpi.serialPuts(serial, data[0].encode('ascii'))
+            for index in range(1, length, 1):
+                #signals that the next data is being sent, uses start of text char
+				#wiringpi.serialPuts(serial, chr(2).encode('ascii'))
+                uart.write(chr(2).encode('ascii'))
+				#write the string data, as ascii, to the Raspberry Pi
+				#wiringpi.serialPuts(serial, data[index].encode('ascii'))
+                uart.write(data[index].encode('ascii'))
+				#signals that data transmission is ending, uses end of transmission char
+				#wiringpi.serialPuts(serial, chr(4).encode('ascii'))
+            uart.write(chr(4).encode('ascii'))
+            #closes the serial port
+			#wiringpi.serialClose(serial)
+            uart.close()
+        except ValueError as e:
+            print("Error regarding values passed to serial.")
+            print(str(e))
+        except serial.SerialException as e:
+            print("Error with port access or configuration")
+            print(str(e))
+        except serial.SerialTimeoutException as e:
+            print("Error regarding write timeout")
+            print(str(e))
         return
+
